@@ -1,15 +1,36 @@
 module SpaceJunk where
 
-import Graphics.Gloss.Interface.Pure.Simulate
 import Graphics.Gloss.Data.Vector
+import Graphics.Gloss.Interface.Pure.Simulate
+import Graphics.Gloss.Juicy
 
 -- | Запустить моделирование с заданным начальным состоянием вселенной.
-demo :: IO ()
-demo = simulate display bgColor fps initSpaceJunk drawSpaceJunk updateSpaceJunk
+demo :: Images -> IO ()
+demo images
+  = simulate display bgColor fps initSpaceJunk (drawSpaceJunk images) updateSpaceJunk
   where
     display = InWindow "Космический мусор" (800, 450) (200, 200)
     bgColor = black   -- цвет фона
     fps     = 60      -- кол-во кадров в секунду
+
+-- | Загрузить изображения из файлов.
+loadImages :: IO Images
+loadImages = do
+  Just asteroid   <- loadJuicyPNG "images/asteroid.png"
+  Just satellite  <- loadJuicyPNG "images/satellite.png"
+  Just ufo        <- loadJuicyPNG "images/ufo.png"
+  return Images
+    { imageAsteroid   = scale 0.1 0.1 asteroid
+    , imageSatellite  = scale 0.3 0.3 satellite
+    , imageUFO        = scale 0.03 0.03 ufo
+    }
+
+-- | Изображения объектов.
+data Images = Images
+  { imageAsteroid  :: Picture   -- ^ Изображение астероида.
+  , imageSatellite :: Picture   -- ^ Изображение спутника.
+  , imageUFO       :: Picture   -- ^ Изображение НЛО.
+  }
 
 -- | Космический мусор.
 data SpaceJunk = SpaceJunk
@@ -42,40 +63,38 @@ data UFO = UFO
 -- | Сгенерировать космический мусор.
 initSpaceJunk :: SpaceJunk
 initSpaceJunk = SpaceJunk
-  { asteroids  = [ Asteroid (0, 0) (10, 2) 30 ]
+  { asteroids  = [ Asteroid (0, 0) (10, 2) 3 ]
   , satellites = [ Satellite (100, 100) (-5, -10) 30 ]
   , ufos       = [ UFO (-100, 100) (-5, -10) (0, 0) ]
   }
 
 -- | Отобразить космический мусор.
-drawSpaceJunk :: SpaceJunk -> Picture
-drawSpaceJunk junk = pictures
-  [ pictures (map drawAsteroid  (asteroids  junk))
-  , pictures (map drawSatellite (satellites junk))
-  , pictures (map drawUFO       (ufos       junk))
+drawSpaceJunk :: Images -> SpaceJunk -> Picture
+drawSpaceJunk images junk = pictures
+  [ pictures (map (drawAsteroid  (imageAsteroid  images)) (asteroids  junk))
+  , pictures (map (drawSatellite (imageSatellite images)) (satellites junk))
+  , pictures (map (drawUFO       (imageUFO       images)) (ufos       junk))
   ]
 
 -- | Отобразить астероид.
-drawAsteroid :: Asteroid -> Picture
-drawAsteroid asteroid = color white (translate x y (thickCircle (r/2) r))
+drawAsteroid :: Picture -> Asteroid -> Picture
+drawAsteroid image asteroid = translate x y (scale r r image)
   where
     (x, y) = asteroidPosition asteroid
-    r = asteroidSize asteroid / 2
+    r = asteroidSize asteroid
 
 -- | Отобразить спутник.
-drawSatellite :: Satellite -> Picture
-drawSatellite satellite = color (greyN 0.5) (translate x y (rotate theta (thickArc 0 30 (r/2) r)))
+drawSatellite :: Picture -> Satellite -> Picture
+drawSatellite image satellite = translate x y (rotate theta image)
   where
     (x, y) = satellitePosition satellite
     theta  = satelliteAngle satellite
-    r = 30
 
 -- | Отобразить НЛО.
-drawUFO :: UFO -> Picture
-drawUFO ufo = color green (translate x y (thickCircle (r/2) r))
+drawUFO :: Picture -> UFO -> Picture
+drawUFO image ufo = translate x y image
   where
     (x, y) = ufoPosition ufo
-    r = 20
 
 -- | Обновить космический мусор.
 updateSpaceJunk :: ViewPort -> Float -> SpaceJunk -> SpaceJunk
@@ -124,5 +143,5 @@ ufoAccel = 10
 
 -- | Скорость вращения спутников.
 satelliteRotationSpeed :: Float
-satelliteRotationSpeed = 5
+satelliteRotationSpeed = 0.5
 
