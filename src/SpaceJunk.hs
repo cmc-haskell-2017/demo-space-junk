@@ -64,7 +64,7 @@ drawAsteroid asteroid = color white (translate x y (thickCircle (r/2) r))
 
 -- | Отобразить спутник.
 drawSatellite :: Satellite -> Picture
-drawSatellite satellite = color (greyN 0.5) (translate x y (thickArc 0 theta (r/2) r))
+drawSatellite satellite = color (greyN 0.5) (translate x y (rotate theta (thickArc 0 30 (r/2) r)))
   where
     (x, y) = satellitePosition satellite
     theta  = satelliteAngle satellite
@@ -100,7 +100,8 @@ updateAsteroid dt asteroid = asteroid
 -- | Обновить положение спутника.
 updateSatellite :: Float -> Satellite -> Satellite
 updateSatellite dt satellite = satellite
-  { satellitePosition = normalisePosition (satellitePosition satellite + mulSV dt (satelliteVelocity satellite)) }
+  { satellitePosition = normalisePosition (satellitePosition satellite + mulSV dt (satelliteVelocity satellite))
+  , satelliteAngle    = satelliteAngle satellite + satelliteRotationSpeed}
 
 -- | Обновить положение НЛО.
 updateUFO :: Float -> UFO -> UFO
@@ -120,3 +121,8 @@ screenHeight = 450
 -- | Ускорение НЛО.
 ufoAccel :: Float
 ufoAccel = 10
+
+-- | Скорость вращения спутников.
+satelliteRotationSpeed :: Float
+satelliteRotationSpeed = 5
+
