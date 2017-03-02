@@ -15,6 +15,7 @@ demo = simulate display bgColor fps initSpaceJunk drawSpaceJunk updateSpaceJunk
 data SpaceJunk = SpaceJunk
   { asteroids   :: [Asteroid]   -- ^ Астероиды.
   , satellites  :: [Satellite]  -- ^ Спутники.
+  , ufos        :: [UFO]        -- ^ НЛО.
   }
 
 -- | Астероид.
@@ -31,11 +32,19 @@ data Satellite = Satellite
   , satelliteAngle    :: Float  -- ^ Угол поворота спутника.
   }
 
+-- | НЛО.
+data UFO = UFO
+  { ufoPosition :: Point  -- ^ Положение НЛО.
+  , ufoVelocity :: Vector -- ^ Вектор скорости.
+  , ufoTarget   :: Point  -- ^ Цель НЛО.
+  }
+
 -- | Сгенерировать космический мусор.
 initSpaceJunk :: SpaceJunk
 initSpaceJunk = SpaceJunk
   { asteroids  = [ Asteroid (0, 0) (10, 2) 30 ]
   , satellites = [ Satellite (100, 100) (-5, -10) 30 ]
+  , ufos       = [ UFO (-100, 100) (-5, -10) (0, 0) ]
   }
 
 -- | Отобразить космический мусор.
@@ -43,6 +52,7 @@ drawSpaceJunk :: SpaceJunk -> Picture
 drawSpaceJunk junk = pictures
   [ pictures (map drawAsteroid  (asteroids  junk))
   , pictures (map drawSatellite (satellites junk))
+  , pictures (map drawUFO       (ufos       junk))
   ]
 
 -- | Отобразить астероид.
@@ -60,20 +70,53 @@ drawSatellite satellite = color (greyN 0.5) (translate x y (thickArc 0 theta (r/
     theta  = satelliteAngle satellite
     r = 30
 
+-- | Отобразить НЛО.
+drawUFO :: UFO -> Picture
+drawUFO ufo = color green (translate x y (thickCircle (r/2) r))
+  where
+    (x, y) = ufoPosition ufo
+    r = 20
+
 -- | Обновить космический мусор.
 updateSpaceJunk :: ViewPort -> Float -> SpaceJunk -> SpaceJunk
 updateSpaceJunk _ dt junk = junk
   { asteroids  = map (updateAsteroid  dt) (asteroids  junk)
   , satellites = map (updateSatellite dt) (satellites junk)
+  , ufos       = map (updateUFO       dt) (ufos       junk)
   }
+
+-- | Вернуть объект на экран, если он вышел за границы.
+-- Наш космос имеет топологию тора.
+normalisePosition :: Point -> Point
+normalisePosition (x, y) = (norm x screenWidth, norm y screenHeight)
+  where
+    norm z d = z - fromIntegral (floor (z / d + 0.5))
 
 -- | Обновить положение астероида.
 updateAsteroid :: Float -> Asteroid -> Asteroid
 updateAsteroid dt asteroid = asteroid
-  { asteroidPosition = asteroidPosition asteroid + mulSV dt (asteroidVelocity asteroid) }
+  { asteroidPosition = normalisePosition (asteroidPosition asteroid + mulSV dt (asteroidVelocity asteroid)) }
 
 -- | Обновить положение спутника.
 updateSatellite :: Float -> Satellite -> Satellite
 updateSatellite dt satellite = satellite
-  { satellitePosition = satellitePosition satellite + mulSV dt (satelliteVelocity satellite) }
+  { satellitePosition = normalisePosition (satellitePosition satellite + mulSV dt (satelliteVelocity satellite)) }
 
+-- | Обновить положение НЛО.
+updateUFO :: Float -> UFO -> UFO
+updateUFO dt ufo = ufo
+  { ufoPosition = normalisePosition (ufoPosition ufo + mulSV dt (ufoVelocity ufo))
+  , ufoVelocity = ufoVelocity ufo + mulSV (dt * ufoAccel) (normalizeV (ufoTarget ufo - ufoPosition ufo))
+  }
+
+-- | Ширина экрана.
+screenWidth :: Num a => a
+screenWidth = 800
+
+-- | Высота экрана.
+screenHeight :: Num a => a
+screenHeight = 450
+
+-- | Ускорение НЛО.
+ufoAccel :: Float
+ufoAccel = 10
