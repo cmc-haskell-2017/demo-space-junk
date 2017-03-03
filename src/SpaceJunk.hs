@@ -25,6 +25,10 @@ loadImages = do
     , imageUFO        = scale 0.02 0.02 ufo
     }
 
+-- =========================================
+-- Модель
+-- =========================================
+
 -- | Изображения объектов.
 data Images = Images
   { imageAsteroid  :: Picture   -- ^ Изображение астероида.
@@ -120,6 +124,10 @@ initSpaceJunk = SpaceJunk
       [ UFO (500, 400) (5, -15) (0, 0) ]
   }
 
+-- =========================================
+-- Функции отрисовки
+-- =========================================
+
 -- | Отобразить космический мусор.
 drawSpaceJunk :: Images -> SpaceJunk -> Picture
 drawSpaceJunk images junk = pictures
@@ -148,6 +156,10 @@ drawUFO image ufo = translate x y image
   where
     (x, y) = ufoPosition ufo
 
+-- =========================================
+-- Функции обновления
+-- =========================================
+
 -- | Обновить космический мусор.
 updateSpaceJunk :: ViewPort -> Float -> SpaceJunk -> SpaceJunk
 updateSpaceJunk _ dt junk = junk
@@ -170,6 +182,10 @@ updateUFO :: Float -> UFO -> UFO
 updateUFO dt ufo = move dt ufo
   { ufoVelocity = ufoVelocity ufo + mulSV (dt * ufoAccel) (normalizeV (ufoTarget ufo - ufoPosition ufo)) }
 
+-- =========================================
+-- Параметры моделирования
+-- =========================================
+
 -- | Ширина экрана.
 screenWidth :: Num a => a
 screenWidth = 800
@@ -186,7 +202,9 @@ ufoAccel = 15
 satelliteRotationSpeed :: Float
 satelliteRotationSpeed = 0.1
 
+-- =========================================
 -- Секция для настроек автоматических тестов
+-- =========================================
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
