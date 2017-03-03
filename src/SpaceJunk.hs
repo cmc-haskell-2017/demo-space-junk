@@ -40,33 +40,34 @@ data SpaceJunk = SpaceJunk
   }
 
 -- | Физический объект с изменяемым положением и скоростью.
---
--- prop> getPosition (getPosition object) == getPosition object
 class Physical a where
   -- | Получить положение объекта.
   getPosition  :: a -> Point
   -- | Установить положение объекта.
-  setPosistion :: Point -> a -> a
+  setPosition :: Point -> a -> a
   -- | Получить вектор скорости объекта.
   getVelocity  :: a -> Vector
 
 -- | Переместить физический объект.
+--
+-- prop> \(object :: Asteroid) -> move 0 object == object
+-- prop> \(object :: Asteroid) -> move x (move y object) ~= move (x + y) object
 move :: Physical a => Float -> a -> a
-move dt object = setPosistion new object
+move dt object = setPosition new object
   where
-    new = normalisePosition (getPosition object + mulSV dt (getVelocity object))
+    new = getPosition object + mulSV dt (getVelocity object)
 
 -- | Астероид.
 data Asteroid = Asteroid
   { asteroidPosition :: Point   -- ^ Положение астероида.
   , asteroidVelocity :: Vector  -- ^ Вектор скорости.
   , asteroidSize     :: Float   -- ^ Размеры (диаметр).
-  }
+  } deriving (Eq, Show)
 
 instance Physical Asteroid where
   getPosition = asteroidPosition
   getVelocity = asteroidVelocity
-  setPosistion new asteroid = asteroid
+  setPosition new asteroid = asteroid
     { asteroidPosition = new }
 
 -- | Спутник.
@@ -79,7 +80,7 @@ data Satellite = Satellite
 instance Physical Satellite where
   getPosition = satellitePosition
   getVelocity = satelliteVelocity
-  setPosistion new satellite = satellite
+  setPosition new satellite = satellite
     { satellitePosition = new }
 
 -- | НЛО.
@@ -92,7 +93,7 @@ data UFO = UFO
 instance Physical UFO where
   getPosition = ufoPosition
   getVelocity = ufoVelocity
-  setPosistion new ufo = ufo
+  setPosition new ufo = ufo
     { ufoPosition = new }
 
 -- | Сгенерировать космический мусор.
@@ -155,13 +156,6 @@ updateSpaceJunk _ dt junk = junk
   , ufos       = map (updateUFO       dt) (ufos       junk)
   }
 
--- | Вернуть объект на экран, если он вышел за границы.
--- Наш космос имеет топологию тора.
-normalisePosition :: Point -> Point
-normalisePosition (x, y) = (norm x screenWidth, norm y screenHeight)
-  where
-    norm z d = z - d * fromIntegral (floor (z / d + 0.5))
-
 -- | Обновить положение астероида.
 updateAsteroid :: Float -> Asteroid -> Asteroid
 updateAsteroid = move
@@ -191,4 +185,15 @@ ufoAccel = 15
 -- | Скорость вращения спутников.
 satelliteRotationSpeed :: Float
 satelliteRotationSpeed = 0.1
+
+-- Секция для настроек автоматических тестов
+
+-- $setup
+-- >>> :set -XScopedTypeVariables
+-- >>> import Test.QuickCheck
+-- >>> class AlmostEq a where (~=) :: a -> a -> Bool
+-- >>> instance AlmostEq Float where x ~= y = x == y || abs (x - y) / max (abs x) (abs y) < 0.001
+-- >>> instance (AlmostEq a, AlmostEq b) => AlmostEq (a, b) where (x, y) ~= (u, v) = x ~= u && y ~= v
+-- >>> instance AlmostEq Asteroid where Asteroid p1 v1 s1 ~= Asteroid p2 v2 s2 = p1 ~= p2 && v1 ~= v2 && s1 ~= s2
+-- >>> instance Arbitrary Asteroid where arbitrary = Asteroid <$> arbitrary <*> arbitrary <*> arbitrary
 

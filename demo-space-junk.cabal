@@ -29,12 +29,13 @@ executable demo-space-junk
                      , demo-space-junk
   default-language:    Haskell2010
 
-test-suite demo-space-junk-test
+test-suite doctest
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  main-is:             Spec.hs
+  main-is:             Doctest.hs
   build-depends:       base
                      , demo-space-junk
+                     , doctest >= 0.11.1
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
