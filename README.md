@@ -29,7 +29,7 @@ stack build && stack exec demo-space-junk
 ## Задание
 
 В качестве задания к [лекции «Классы типов»](https://youtu.be/efwK257k47o) требуется
-определить законы, которым должен удовлетворять [класс `Physical`](https://github.com/fizruk/demo-space-junk/blob/master/src/SpaceJunk.hs#L46-L53).
+определить законы, которым должен удовлетворять [класс `Physical`](https://github.com/cmc-haskell-2017/demo-space-junk/blob/master/src/SpaceJunk.hs#L46-L53).
 
 Запишите законы в комментариях к классу в виде проверяемых свойств:
 
@@ -37,7 +37,7 @@ stack build && stack exec demo-space-junk
 -- prop> \(object :: Asteroid) -> <выражение типа Bool, которое использует object>
 ```
 
-В качестве примера такой формулировки законов, посмотрите на формулировки для [функции `move`](https://github.com/fizruk/demo-space-junk/blob/master/src/SpaceJunk.hs#L55-L62):
+В качестве примера такой формулировки законов, посмотрите на формулировки для [функции `move`](https://github.com/cmc-haskell-2017/demo-space-junk/blob/master/src/SpaceJunk.hs#L55-L62):
 
 ```haskell
 -- prop> \(object :: Asteroid) -> move 0 object == object
