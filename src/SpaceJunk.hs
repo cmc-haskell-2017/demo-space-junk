@@ -9,7 +9,7 @@ demo :: Images -> IO ()
 demo images
   = simulate display bgColor fps initSpaceJunk (drawSpaceJunk images) updateSpaceJunk
   where
-    display = InWindow "Космический мусор" (800, 450) (200, 200)
+    display = InWindow "Космический мусор" (screenWidth, screenHeight) (100, 100)
     bgColor = black   -- цвет фона
     fps     = 60      -- кол-во кадров в секунду
 
@@ -21,8 +21,8 @@ loadImages = do
   Just ufo        <- loadJuicyPNG "images/ufo.png"
   return Images
     { imageAsteroid   = scale 0.1 0.1 asteroid
-    , imageSatellite  = scale 0.3 0.3 satellite
-    , imageUFO        = scale 0.03 0.03 ufo
+    , imageSatellite  = scale 0.1 0.1 satellite
+    , imageUFO        = scale 0.02 0.02 ufo
     }
 
 -- | Изображения объектов.
@@ -63,9 +63,25 @@ data UFO = UFO
 -- | Сгенерировать космический мусор.
 initSpaceJunk :: SpaceJunk
 initSpaceJunk = SpaceJunk
-  { asteroids  = [ Asteroid (0, 0) (10, 2) 3 ]
-  , satellites = [ Satellite (100, 100) (-5, -10) 30 ]
-  , ufos       = [ UFO (-100, 100) (-5, -10) (0, 0) ]
+  { asteroids  =
+      [ Asteroid ( 200,    0) (  6,   6) 3
+      , Asteroid (-200,   25) (  9,   9) 2
+      , Asteroid (   0,  -25) ( 12,  12) 1.5
+      , Asteroid (   0,   50) ( 12,  10) 1.5
+      , Asteroid (-100, -100) (  9,  10) 2.1
+      , Asteroid (-400, -225) (4.5,   5) 4
+      , Asteroid ( 100, -100) (  9,   9) 2
+      , Asteroid (-300,  -75) (  6,   6) 3
+      , Asteroid (-100, -125) ( 12,  12) 1.5
+      , Asteroid (-100,  -50) ( 12,  10) 1.5
+      , Asteroid (-200, -200) (  9,  10) 2.1
+      ]
+  , satellites =
+      [ Satellite (-450, 250)  ( 10, -15) 100
+      , Satellite ( 500, -300) (-10,  15) 0
+      ]
+  , ufos =
+      [ UFO (500, 400) (5, -15) (0, 0) ]
   }
 
 -- | Отобразить космический мусор.
@@ -139,9 +155,9 @@ screenHeight = 450
 
 -- | Ускорение НЛО.
 ufoAccel :: Float
-ufoAccel = 10
+ufoAccel = 15
 
 -- | Скорость вращения спутников.
 satelliteRotationSpeed :: Float
-satelliteRotationSpeed = 0.5
+satelliteRotationSpeed = 0.1
 
