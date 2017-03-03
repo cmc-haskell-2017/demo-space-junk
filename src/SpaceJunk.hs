@@ -39,12 +39,35 @@ data SpaceJunk = SpaceJunk
   , ufos        :: [UFO]        -- ^ НЛО.
   }
 
+-- | Физический объект с изменяемым положением и скоростью.
+--
+-- prop> getPosition (getPosition object) == getPosition object
+class Physical a where
+  -- | Получить положение объекта.
+  getPosition  :: a -> Point
+  -- | Установить положение объекта.
+  setPosistion :: Point -> a -> a
+  -- | Получить вектор скорости объекта.
+  getVelocity  :: a -> Vector
+
+-- | Переместить физический объект.
+move :: Physical a => Float -> a -> a
+move dt object = setPosistion new object
+  where
+    new = normalisePosition (getPosition object + mulSV dt (getVelocity object))
+
 -- | Астероид.
 data Asteroid = Asteroid
   { asteroidPosition :: Point   -- ^ Положение астероида.
   , asteroidVelocity :: Vector  -- ^ Вектор скорости.
   , asteroidSize     :: Float   -- ^ Размеры (диаметр).
   }
+
+instance Physical Asteroid where
+  getPosition = asteroidPosition
+  getVelocity = asteroidVelocity
+  setPosistion new asteroid = asteroid
+    { asteroidPosition = new }
 
 -- | Спутник.
 data Satellite = Satellite
@@ -53,12 +76,24 @@ data Satellite = Satellite
   , satelliteAngle    :: Float  -- ^ Угол поворота спутника.
   }
 
+instance Physical Satellite where
+  getPosition = satellitePosition
+  getVelocity = satelliteVelocity
+  setPosistion new satellite = satellite
+    { satellitePosition = new }
+
 -- | НЛО.
 data UFO = UFO
   { ufoPosition :: Point  -- ^ Положение НЛО.
   , ufoVelocity :: Vector -- ^ Вектор скорости.
   , ufoTarget   :: Point  -- ^ Цель НЛО.
   }
+
+instance Physical UFO where
+  getPosition = ufoPosition
+  getVelocity = ufoVelocity
+  setPosistion new ufo = ufo
+    { ufoPosition = new }
 
 -- | Сгенерировать космический мусор.
 initSpaceJunk :: SpaceJunk
@@ -129,21 +164,17 @@ normalisePosition (x, y) = (norm x screenWidth, norm y screenHeight)
 
 -- | Обновить положение астероида.
 updateAsteroid :: Float -> Asteroid -> Asteroid
-updateAsteroid dt asteroid = asteroid
-  { asteroidPosition = normalisePosition (asteroidPosition asteroid + mulSV dt (asteroidVelocity asteroid)) }
+updateAsteroid = move
 
 -- | Обновить положение спутника.
 updateSatellite :: Float -> Satellite -> Satellite
-updateSatellite dt satellite = satellite
-  { satellitePosition = normalisePosition (satellitePosition satellite + mulSV dt (satelliteVelocity satellite))
-  , satelliteAngle    = satelliteAngle satellite + satelliteRotationSpeed}
+updateSatellite dt satellite = move dt satellite
+  { satelliteAngle = satelliteAngle satellite + satelliteRotationSpeed}
 
 -- | Обновить положение НЛО.
 updateUFO :: Float -> UFO -> UFO
-updateUFO dt ufo = ufo
-  { ufoPosition = normalisePosition (ufoPosition ufo + mulSV dt (ufoVelocity ufo))
-  , ufoVelocity = ufoVelocity ufo + mulSV (dt * ufoAccel) (normalizeV (ufoTarget ufo - ufoPosition ufo))
-  }
+updateUFO dt ufo = move dt ufo
+  { ufoVelocity = ufoVelocity ufo + mulSV (dt * ufoAccel) (normalizeV (ufoTarget ufo - ufoPosition ufo)) }
 
 -- | Ширина экрана.
 screenWidth :: Num a => a
