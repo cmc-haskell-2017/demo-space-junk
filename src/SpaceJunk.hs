@@ -125,7 +125,7 @@ updateSpaceJunk _ dt junk = junk
 normalisePosition :: Point -> Point
 normalisePosition (x, y) = (norm x screenWidth, norm y screenHeight)
   where
-    norm z d = z - fromIntegral (floor (z / d + 0.5))
+    norm z d = z - d * fromIntegral (floor (z / d + 0.5))
 
 -- | Обновить положение астероида.
 updateAsteroid :: Float -> Asteroid -> Asteroid
